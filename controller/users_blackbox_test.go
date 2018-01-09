@@ -1510,6 +1510,21 @@ func (s *UsersControllerTestSuite) TestCreateUserAsServiceAccountUnauthorized() 
 	test.CreateUsersUnauthorized(s.T(), secureService.Context, secureService, secureController, createUserPayload)
 }
 
+func (s *UsersControllerTestSuite) TestInitTenantOK() {
+	user := testsupport.TestUser
+	identity := testsupport.TestIdentity
+	identity.User = user
+	user.Cluster = "some cluster"
+
+	secureService, secureController := s.SecuredServiceAccountController(testsupport.TestOnlineRegistrationAppIdentity)
+	createUserPayload := createCreateUsersAsServiceAccountPayload(&user.Email, nil, nil, nil, nil, nil, &identity.Username, nil, user.ID.String(), &user.Cluster, nil, nil, nil)
+
+	checkInitTenant(s.T(), func(tenantContext *tenantContext) {
+		secureController.InitTenant = newInitTenant(tenantContext)
+		test.CreateUsersOK(s.T(), secureService.Context, secureService, secureController, createUserPayload)
+	})
+}
+
 func (s *UsersControllerTestSuite) TestCreateUserAsNonServiceAccountUnauthorized() {
 	// given
 	user := testsupport.TestUser

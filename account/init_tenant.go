@@ -7,6 +7,7 @@ import (
 
 	"github.com/fabric8-services/fabric8-auth/account/tenant"
 	"github.com/fabric8-services/fabric8-auth/goasupport"
+	"github.com/fabric8-services/fabric8-auth/log"
 	"github.com/fabric8-services/fabric8-auth/rest"
 	"github.com/goadesign/goa/client"
 )
@@ -55,7 +56,12 @@ func createClient(ctx context.Context, config tenantConfig) (*tenant.Client, err
 func KickOffTenantAction(ctx context.Context, action func(ctx context.Context) error) {
 	if action != nil {
 		go func(ctx context.Context) {
-			action(ctx)
+			err := action(ctx)
+			if err != nil {
+				log.Error(ctx, map[string]interface{}{
+					"err": err,
+				}, "unable to kick off tenant action")
+			}
 		}(ctx)
 	}
 }
