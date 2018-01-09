@@ -50,3 +50,12 @@ func createClient(ctx context.Context, config tenantConfig) (*tenant.Client, err
 	c.SetJWTSigner(goasupport.NewForwardSigner(ctx))
 	return c, nil
 }
+
+// KickOffTenantAction run a tenant action (if not nil) in a new thread
+func KickOffTenantAction(ctx context.Context, action func(ctx context.Context) error) {
+	if action != nil {
+		go func(ctx context.Context) {
+			action(ctx)
+		}(ctx)
+	}
+}

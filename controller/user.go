@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/fabric8-services/fabric8-auth/account"
@@ -21,7 +20,6 @@ type UserController struct {
 	db           application.DB
 	tokenManager token.Manager
 	config       UserControllerConfiguration
-	InitTenant   func(ctx context.Context) error
 }
 
 // UserControllerConfiguration the Configuration for the UserController
@@ -65,11 +63,6 @@ func (c *UserController) Show(ctx *app.ShowUserContext) error {
 			}
 		}
 		return ctx.ConditionalRequest(*user, c.config.GetCacheControlUser, func() error {
-			if c.InitTenant != nil {
-				go func(ctx context.Context) {
-					c.InitTenant(ctx)
-				}(ctx)
-			}
 			return ctx.OK(ConvertToAppUser(ctx.RequestData, user, identity, true))
 		})
 	})

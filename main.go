@@ -208,10 +208,6 @@ func main() {
 
 	// Mount "user" controller
 	userCtrl := controller.NewUserController(service, appDB, tokenManager, config)
-	if config.GetTenantServiceURL() != "" {
-		log.Logger().Infof("Enabling Init Tenant service %v", config.GetTenantServiceURL())
-		userCtrl.InitTenant = account.NewInitTenant(config)
-	}
 	app.MountUserController(service, userCtrl)
 
 	// Mount "search" controller
@@ -230,6 +226,15 @@ func main() {
 	// Mount "collaborators" controller
 	collaboratorsCtrl := controller.NewCollaboratorsController(service, appDB, config, auth.NewKeycloakPolicyManager(config))
 	app.MountCollaboratorsController(service, collaboratorsCtrl)
+
+	// Enable Init Tenant service
+	if config.GetTenantServiceURL() != "" {
+		log.Logger().Infof("Enabling Init Tenant service %v", config.GetTenantServiceURL())
+		initTenant := account.NewInitTenant(config)
+		usersCtrl.InitTenant = initTenant // Init tenant when user is created/approved
+		loginCtrl.InitTenant = initTenant // When user logs in via /login
+		tokenCtrl.InitTenant = initTenant // When user logs in via Oauth2
+	}
 
 	log.Logger().Infoln("Git Commit SHA: ", controller.Commit)
 	log.Logger().Infoln("UTC Build Time: ", controller.BuildTime)

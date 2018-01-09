@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/fabric8-services/fabric8-auth/account"
 	"github.com/fabric8-services/fabric8-auth/app"
 	"github.com/fabric8-services/fabric8-auth/application"
@@ -30,6 +28,7 @@ import (
 	errs "github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 )
 
 // TokenController implements the login resource.
@@ -42,6 +41,7 @@ type TokenController struct {
 	Configuration                LoginConfiguration
 	keycloakExternalTokenService keycloak.KeycloakExternalTokenService
 	providerConfigFactory        link.OauthProviderFactory
+	InitTenant                   func(ctx context.Context) error
 }
 
 // NewTokenController creates a token controller.
@@ -460,6 +460,9 @@ func (c *TokenController) Exchange(ctx *app.ExchangeTokenContext) error {
 			RefreshToken: &keycloakToken.RefreshToken,
 			TokenType:    &keycloakToken.TokenType,
 		}
+
+		account.KickOffTenantAction(ctx, c.InitTenant)
+
 		return ctx.OK(token)
 	}
 

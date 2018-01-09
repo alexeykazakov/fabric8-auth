@@ -24,7 +24,7 @@ import (
 	goajwt "github.com/goadesign/goa/middleware/security/jwt"
 	"github.com/jinzhu/gorm"
 	errs "github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 // UsersController implements the users resource.
@@ -36,6 +36,7 @@ type UsersController struct {
 	RemoteWITService         wit.RemoteWITService
 	EmailVerificationService email.EmailVerificationService
 	keycloakLinkService      linkAPI.KeycloakIDPService
+	InitTenant               func(ctx context.Context) error
 }
 
 // UsersControllerConfiguration the Configuration for the UsersController
@@ -148,7 +149,7 @@ func (c *UsersController) Create(ctx *app.CreateUsersContext) error {
 		return jsonapi.JSONErrorResponse(ctx, errors.NewInternalError(ctx, err))
 	}
 
-	// finally, if all works, we create a user in WIT too.
+	// If all works, we create a user in WIT too.
 	witURL, err := c.config.GetWITURL(ctx.RequestData)
 	if err != nil {
 		log.Error(ctx, map[string]interface{}{
@@ -167,6 +168,8 @@ func (c *UsersController) Create(ctx *app.CreateUsersContext) error {
 		}, "failed to create user in WIT")
 		// Not a blocker. Log the error and proceed.
 	}
+
+	account.KickOffTenantAction(ctx, c.InitTenant)
 
 	return ctx.OK(ConvertToAppUser(ctx.RequestData, user, identity, true))
 }

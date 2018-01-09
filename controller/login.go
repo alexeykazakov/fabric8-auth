@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/fabric8-services/fabric8-auth/account"
 	"github.com/fabric8-services/fabric8-auth/app"
 	"github.com/fabric8-services/fabric8-auth/configuration"
 	"github.com/fabric8-services/fabric8-auth/errors"
@@ -47,6 +49,7 @@ type LoginController struct {
 	Auth          login.KeycloakOAuthService
 	TokenManager  token.Manager
 	Configuration LoginConfiguration
+	InitTenant    func(ctx context.Context) error
 }
 
 // NewLoginController creates a login controller.
@@ -81,6 +84,8 @@ func (c *LoginController) Login(ctx *app.LoginLoginContext) error {
 		Endpoint:     oauth2.Endpoint{AuthURL: authEndpoint, TokenURL: tokenEndpoint},
 		RedirectURL:  rest.AbsoluteURL(ctx.RequestData, "/api/login"),
 	}
+
+	account.KickOffTenantAction(ctx, c.InitTenant)
 
 	ctx.ResponseData.Header().Set("Cache-Control", "no-cache")
 	return c.Auth.Login(ctx, oauth, c.Configuration)
