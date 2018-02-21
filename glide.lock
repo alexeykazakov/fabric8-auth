@@ -49,6 +49,10 @@ imports:
   version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: github.com/fzipp/gocyclo
   version: 6acd4345c835499920e8426c7e4e8d7a34f1bb83
+- name: github.com/getsentry/raven-go
+  version: 563b81fc02b75d664e54da31f787c2cc2186780b
+- name: github.com/certifi/gocertifi
+  version: deb3ae2ef2610fde3330947281941c562861188b
 - name: github.com/goadesign/goa
   version: 5646a430cdeb66983d5ace3384e0a667c185abc7
   vcs: git

@@ -76,6 +76,9 @@ func (c *UsersController) Show(ctx *app.ShowUsersContext) error {
 		}
 		identity, err := appl.Identities().Load(ctx.Context, identityID)
 		if err != nil {
+			log.Error(ctx, map[string]interface{}{
+				"err": err,
+			}, "failed to load identity")
 			jerrors, httpStatusCode := jsonapi.ErrorToJSONAPIErrors(ctx, err)
 			return ctx.ResponseData.Service.Send(ctx.Context, httpStatusCode, jerrors)
 		}

@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 
+	"fmt"
+	"github.com/getsentry/raven-go"
 	"github.com/goadesign/goa"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,6 +23,7 @@ var (
 		Hooks:     make(log.LevelHooks),
 		Level:     getDefaultLogLevel(),
 	}
+	dsn = os.Getenv("SENTRY_DSN")
 )
 
 // InitializeLogger creates a default logger with the given ouput format and log level
@@ -155,10 +158,27 @@ func Error(ctx context.Context, fields map[string]interface{}, format string, ar
 			}
 		}
 
+		entry = entry.WithFields(fields)
+		captureError(*entry, format, args)
+
 		if len(args) > 0 {
-			entry.WithFields(fields).Errorf(format, args)
+			entry.Errorf(format, args)
 		} else {
-			entry.WithFields(fields).Errorln(format)
+			entry.Errorln(format)
+		}
+	}
+}
+
+// captureError sends an error to sentry
+func captureError(entry log.Entry, format string, args ...interface{}) {
+	if dsn != "" {
+		sentry, err := raven.New(dsn)
+		if err == nil {
+			tags := make(map[string]string)
+			for k, v := range entry.Data {
+				tags[k] = fmt.Sprintf("%+v", v)
+			}
+			sentry.CaptureMessage(fmt.Sprintf(format, args), tags)
 		}
 	}
 }
