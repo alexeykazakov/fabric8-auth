@@ -176,7 +176,12 @@ func captureError(entry log.Entry, format string, args ...interface{}) {
 		if err == nil {
 			tags := make(map[string]string)
 			for k, v := range entry.Data {
-				tags[k] = fmt.Sprintf("%+v", v)
+				val := fmt.Sprintf("%+v", v)
+				val = strings.Replace(val, "\n", ";", -1)
+				if len(val) > 200 {
+					val = val[0:196] + "..."
+				}
+				tags[k] = val
 			}
 			sentry.CaptureMessage(fmt.Sprintf(format, args), tags)
 		}
